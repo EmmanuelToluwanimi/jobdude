@@ -1,8 +1,7 @@
 (async () => {
-  let jobsContainer = document.querySelectorAll(
-    ".scaffold-layout__list-container > li"
+  let jobsContainer = document.getElementsByClassName(
+    "scaffold-layout__list-item"
   );
-  // let jobsContainer = document.querySelector(".jobs-search-results__list-item")
   let titleContainer = document.getElementsByClassName("job-card-list__title");
   let locationContainer = document.getElementsByClassName(
     "job-card-container__company-name"
@@ -16,48 +15,47 @@
   let importBtn = document.querySelector(".import_btn");
   let redirectBtn = document.querySelector(".redirect_btn");
 
-  
   let token = "";
   let isCorrectUrl = false;
 
   let jobs = [];
   let baseUrl = "https://personarise-api.onrender.com/";
 
-  const myTimeout = setTimeout(scrapeJobs, 5000);
-
-
   function scrapeJobs() {
-    if(!jobsContainer || jobsContainer.length === 0) {
+    if (!jobsContainer || jobsContainer.length === 0) {
       console.log("No jobs container specified");
       return;
     }
+    console.log(jobsContainer.length);
 
     [...jobsContainer].forEach((el, i) => {
-      const title = document
-        .querySelectorAll(".job-card-list__title")
-        [i]?.innerHTML.trim();
-      const location = document
-        .querySelectorAll(".job-card-container__metadata-item:first-child")
-        [i]?.innerHTML.trim();
-      const company = document
-        .querySelectorAll(".job-card-container__company-name")
-        [i]?.innerHTML.trim();
-      const jobId = document
-        .querySelectorAll(".job-card-container")
-        [i]?.getAttribute("data-job-id")
+      const title = el
+        .querySelectorAll(".job-card-list__title")[0]
+        ?.innerHTML.trim();
+      const job_location = el
+        .querySelectorAll(".job-card-container__metadata-item")[0]
+        ?.innerHTML.trim();
+      const job_type = el
+      .querySelectorAll(".job-card-container__metadata-item")[1]
+      ?.innerHTML.trim();
+      const company = el
+        .querySelectorAll(".job-card-container__company-name")[0]
+        ?.innerHTML.trim();
+      const jobId = el
+        .querySelectorAll(".job-card-container")[0]
+        ?.getAttribute("data-job-id")
         .trim();
-  
+
       if (title) {
-        jobs = [...jobs, { title, company, location, jobId }];
+        jobs = [...jobs, { title, company, jobId, location: `${job_location} - ${job_type}` }];
       }
     });
-    
+
     console.log(jobs);
 
     // setTimeout(() => {
     //   importJobs()
     // }, 2000);
-
   }
 
   let _url = window.location.hostname;
@@ -95,42 +93,38 @@
     fetch(baseUrl + "api/jobs", options);
   }
 
-  chrome.runtime.onMessage.addListener(
-    function(request, sender, sendResponse) {
-      // listen for messages sent from background.js
-      if (request.message === 'hello!') {
-        console.log(request.url) // new url is now in content scripts!
-        console.log("nopeeeeeeeeeeeeeeeeeeee")
-        if(request.url.includes('linkedin.com/jobs/search')){
-          console.log("yessssssssssssssssssssssssssssssss")
-          const myTimeout = setTimeout(scrapeJobs, 5000);
+  chrome.runtime.onMessage.addListener(function (
+    request,
+    sender,
+    sendResponse
+  ) {
+    // listen for messages sent from background.js
+    const validateTab = request.url.includes("linkedin.com/jobs/search");
+    if (!validateTab) return;
 
-        } 
-      }
+    if (request.message === "hello!") {
+      console.log(request.url); // new url is now in content scripts!
+    } else if (request.message === "SCRAPE") {
+      scrapeJobs();
+    }
   });
 
-  function toggleButtons(value){
+  function toggleButtons(value) {
+    if (!importBtn && !redirectBtn) return;
 
-    if(!importBtn && !redirectBtn) return;
-
-    if(value){
+    if (value) {
       importBtn.classList.remove(".d-none");
       redirectBtn.classList.add(".d-none");
     } else {
       importBtn.classList.add(".d-none");
       redirectBtn.classList.remove(".d-none");
     }
-
-    importBtn.addEventListener("click", scrapeJobs)
-
   }
 
   function checkUrl() {
-    const url = window.location.href
-    const value = url.includes("linkedin.com/jobs/search")
-    toggleButtons(value)
+    const url = window.location.href;
+    const value = url.includes("linkedin.com/jobs/search");
+    toggleButtons(value);
   }
   checkUrl();
-
-
 })();

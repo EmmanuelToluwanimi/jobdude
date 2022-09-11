@@ -20,11 +20,18 @@ function toggleButtons(value) {
         redirectBtn.classList.remove("d-none");
     }
 
-    importBtn.addEventListener("click", scrapeJobs);
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
+importBtn.addEventListener("click", async ()=> {
+    const {id, url} = await getActiveTabUrl();
+    chrome.tabs.sendMessage(id, {
+        message: "SCRAPE",
+        url
+    })
+});
 
+
+document.addEventListener("DOMContentLoaded", async () => {
     const {url} = await getActiveTabUrl();
     const value = url.includes("linkedin.com/jobs/search");
     toggleButtons(value);
