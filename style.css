@@ -1,0 +1,9 @@
+.container_wrapper {
+    width: 300px;
+    height: 400px;
+    
+}
+
+.hide {
+    display: none !important;
+}
