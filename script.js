@@ -12,14 +12,8 @@
   let linkContainer = document.getElementsByClassName(
     "job-card-container__link"
   );
-  let importBtn = document.querySelector(".import_btn");
-  let redirectBtn = document.querySelector(".redirect_btn");
-
-  let token = "";
-  let isCorrectUrl = false;
 
   let jobs = [];
-  let baseUrl = "https://personarise-api.onrender.com/";
 
   function scrapeJobs() {
     if (!jobsContainer || jobsContainer.length === 0) {
@@ -52,46 +46,9 @@
     });
 
     console.log(jobs);
-
-    // setTimeout(() => {
-    //   importJobs()
-    // }, 2000);
+    return jobs;
   }
 
-  let _url = window.location.hostname;
-  if (_url.includes("jobdude.netlify.app")) {
-    token = getCookie("x-token");
-  }
-
-  function getCookie(cname) {
-    let name = cname + "=";
-    let decodedCookie = decodeURIComponent(document.cookie);
-    let ca = decodedCookie.split(";");
-    for (let i = 0; i < ca.length; i++) {
-      let c = ca[i];
-      while (c.charAt(0) == " ") {
-        c = c.substring(1);
-      }
-      if (c.indexOf(name) == 0) {
-        return c.substring(name.length, c.length);
-      }
-    }
-    return "";
-  }
-
-  function importJobs() {
-    if (jobs.length === 0) return;
-
-    const options = {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(jobs),
-    };
-    fetch(baseUrl + "api/jobs", options);
-  }
 
   chrome.runtime.onMessage.addListener(function (
     request,
@@ -105,26 +62,10 @@
     if (request.message === "hello!") {
       console.log(request.url); // new url is now in content scripts!
     } else if (request.message === "SCRAPE") {
-      scrapeJobs();
+      const allJobs = scrapeJobs();
+      sendResponse({data: allJobs});
+      return true;
     }
   });
 
-  function toggleButtons(value) {
-    if (!importBtn && !redirectBtn) return;
-
-    if (value) {
-      importBtn.classList.remove(".d-none");
-      redirectBtn.classList.add(".d-none");
-    } else {
-      importBtn.classList.add(".d-none");
-      redirectBtn.classList.remove(".d-none");
-    }
-  }
-
-  function checkUrl() {
-    const url = window.location.href;
-    const value = url.includes("linkedin.com/jobs/search");
-    toggleButtons(value);
-  }
-  checkUrl();
 })();

@@ -20,5 +20,9 @@
     },
     "background": {
         "service_worker": "background.js"
-    }
+    },
+    "host_permissions": [
+        "https://www.jobdude.netlify.app/",
+        "https://jobdude.netlify.app/"
+    ]
 }
